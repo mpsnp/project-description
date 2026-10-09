@@ -95,6 +95,9 @@ public struct Target: Codable, Equatable, Hashable, Comparable {
 
     public var prune: Bool
 
+    /// Internal: identifies an imported SPM system-library target that uses a module map instead of sources.
+    public var isSystemLibrary: Bool
+
     enum CodingKeys: String, CodingKey {
         case name
         case destinations
@@ -125,6 +128,7 @@ public struct Target: Codable, Equatable, Hashable, Comparable {
         case mergeable
         case filesGroup
         case prune
+        case isSystemLibrary
     }
 
     public init(
@@ -188,6 +192,7 @@ public struct Target: Codable, Equatable, Hashable, Comparable {
         
         // Internal
         self.prune = false
+        self.isSystemLibrary = false
     }
 
     // MARK: - Equatable
@@ -198,6 +203,7 @@ public struct Target: Codable, Equatable, Hashable, Comparable {
             && lhs.resources == rhs.resources && lhs.headers == rhs.headers && lhs.coreDataModels == rhs.coreDataModels && lhs.scripts == rhs.scripts
             && lhs.dependencies == rhs.dependencies && lhs.mergedBinaryType == rhs.mergedBinaryType && lhs.mergeable == rhs.mergeable
             && lhs.environmentVariables == rhs.environmentVariables
+            && lhs.isSystemLibrary == rhs.isSystemLibrary
     }
 
     // MARK: - Hashable
@@ -209,6 +215,7 @@ public struct Target: Codable, Equatable, Hashable, Comparable {
         hasher.combine(bundleId)
         hasher.combine(productName)
         hasher.combine(environmentVariables)
+        hasher.combine(isSystemLibrary)
     }
 
     // MARK: - Comparable
@@ -253,6 +260,9 @@ public struct Target: Codable, Equatable, Hashable, Comparable {
         try c.encode(mergeable, forKey: .mergeable)
         try c.encode(filesGroup, forKey: .filesGroup)
         try c.encode(prune, forKey: .prune)
+        if isSystemLibrary {
+            try c.encode(isSystemLibrary, forKey: .isSystemLibrary)
+        }
     }
 
     // MARK: - Decodable
@@ -289,5 +299,6 @@ public struct Target: Codable, Equatable, Hashable, Comparable {
         mergeable = try c.decode(Bool.self, forKey: .mergeable)
         filesGroup = try c.decodeIfPresent(ProjectGroup.self, forKey: CodingKeys.filesGroup) ?? .group(name: "Project")
         prune = try c.decodeIfPresent(Bool.self, forKey: .prune) ?? false
+        isSystemLibrary = try c.decodeIfPresent(Bool.self, forKey: .isSystemLibrary) ?? false
     }
 }
